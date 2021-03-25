@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Hatchtrack.ipa</key>
+	<array>
+		<dict>
+			<key>architectures</key>
+			<array>
+				<string>arm64</string>
+			</array>
+			<key>certificate</key>
+			<dict>
+				<key>SHA1</key>
+				<string>EACC55202093E3356392D872734389939D430D2E</string>
+				<key>dateExpires</key>
+				<string>5/22/21</string>
+				<key>type</key>
+				<string>Apple Distribution</string>
+			</dict>
+			<key>entitlements</key>
+			<dict>
+				<key>application-identifier</key>
+				<string>V3S8SGT4VX.com.ios.hatchtracksensor</string>
+				<key>aps-environment</key>
+				<string>production</string>
+				<key>com.apple.developer.team-identifier</key>
+				<string>V3S8SGT4VX</string>
+				<key>get-task-allow</key>
+				<false/>
+			</dict>
+			<key>name</key>
+			<string>Hatchtrack.app</string>
+			<key>profile</key>
+			<dict>
+				<key>UUID</key>
+				<string>97512b9d-90f5-45a5-8f04-2aa784d3edff</string>
+				<key>name</key>
+				<string>iOS Team Ad Hoc Provisioning Profile: com.ios.hatchtracksensor</string>
+			</dict>
+			<key>team</key>
+			<dict>
+				<key>id</key>
+				<string>V3S8SGT4VX</string>
+				<key>name</key>
+				<string>devin sewell</string>
+			</dict>
+		</dict>
+	</array>
+</dict>
+</plist>

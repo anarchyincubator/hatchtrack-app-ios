@@ -217,7 +217,9 @@ class ListViewHatches: UIViewController, UITableViewDelegate, UITableViewDataSou
             let data:[String:String] = [
                 "email": String(email!)
             ]
-            self.getAPICalling(mainUrl:"/api/v1/peep/hatches_all_data_email",type:"hatches", tokenString: accessToken!, data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
+            
+            self.reload_hatch_list()
+//            self.getAPICalling(mainUrl:"/api/v1/peep/hatches_all_data_email",type:"hatches", tokenString: accessToken!, data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
             
             //getAPICalling(mainUrl:"https://db.hatchtrack.com:18888/api/v1/peep/hatches_all_data_email?email="+email!,type:"hatches",tokenString:accessToken!)
             //RestApi(urlString:"https://s49404.gridserver.com/hatchtrack/api_placeholder.php?mode=all_hatches&accessToken="+accessToken!)
@@ -322,24 +324,31 @@ class ListViewHatches: UIViewController, UITableViewDelegate, UITableViewDataSou
             loadingIndicator.heightAnchor
                 .constraint(equalTo: self.loadingIndicator.widthAnchor)
         ])
-        loadingIndicator.isAnimating = true
+        // loadingIndicator.isAnimating = true
     }
     
     @objc func reload_hatch_list(){
-        let defaults = UserDefaults.standard
-        let accessToken = defaults.string(forKey: "accessToken")
-        let email = defaults.string(forKey: "email")
-        //getAPICalling(mainUrl:"https://db.hatchtrack.com:18888/api/v1/peep/hatches_all_data_email?email="+email!,type:"hatches",tokenString:accessToken!)
-        
-        let data:[String:String] = [
-            "email":  String(email!)
-        ]
-        self.getAPICalling(mainUrl:"/api/v1/peep/hatches_all_data_email",type:"hatches", tokenString: accessToken!, data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
+//        let defaults = UserDefaults.standard
+//        let accessToken = defaults.string(forKey: "accessToken")
+//        let email = defaults.string(forKey: "email")
+//        //getAPICalling(mainUrl:"https://db.hatchtrack.com:18888/api/v1/peep/hatches_all_data_email?email="+email!,type:"hatches",tokenString:accessToken!)
+//
+//        let data:[String:String] = [
+//            "email":  String(email!)
+//        ]
+//        self.getAPICalling(mainUrl:"/api/v1/peep/hatches_all_data_email",type:"hatches", tokenString: accessToken!, data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
+        let list = Utility.getHatchData()
+        self.hatchsArray = list
+        //print(self.hatchsArray)
+        DispatchQueue.main.async {
+            self.loadingIndicator.isAnimating = false
+            self.hatchesTableView.reloadData()
+        }
         
     }
     
     @objc func loading_true(){
-        loadingIndicator.isAnimating = true
+        // loadingIndicator.isAnimating = true
     }
     @objc func loading_false(){
         loadingIndicator.isAnimating = false
@@ -496,11 +505,13 @@ class ListViewHatches: UIViewController, UITableViewDelegate, UITableViewDataSou
     }
     
     func deleteHatch(uuid:String){
-        let defaults = UserDefaults.standard
-        let accessToken:String = defaults.string(forKey: "accessToken")!
-        let data:[String:Any] = ["hatchUUID":uuid,"accessToken":accessToken]
-        print("data",data)
-        self.getAPICalling(mainUrl:"/api/v1/hatch/delete",type:"deleteHatch", tokenString: accessToken, data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
+//        let defaults = UserDefaults.standard
+//        let accessToken:String = defaults.string(forKey: "accessToken")!
+//        let data:[String:Any] = ["hatchUUID":uuid,"accessToken":accessToken]
+//        print("data",data)
+//        self.getAPICalling(mainUrl:"/api/v1/hatch/delete",type:"deleteHatch", tokenString: accessToken, data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
+        Utility.deleteHatchByUUID(uuid)
+        self.reload_hatch_list()
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -512,15 +523,26 @@ class ListViewHatches: UIViewController, UITableViewDelegate, UITableViewDataSou
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! TableCellListView
         cell.selectionStyle = .none
         var hatchName = ""
-        if ((self.hatchsArray[indexPath.row]["hatch_name"] as? String) != nil){
-            hatchName = self.hatchsArray[indexPath.row]["hatch_name"] as! String
+//        if ((self.hatchsArray[indexPath.row]["hatch_name"] as? String) != nil){
+//            hatchName = self.hatchsArray[indexPath.row]["hatch_name"] as! String
+//        }else{
+//            hatchName = "HATCH"
+//        }
+        if ((self.hatchsArray[indexPath.row]["hatchName"] as? String) != nil){
+            hatchName = self.hatchsArray[indexPath.row]["hatchName"] as! String
         }else{
             hatchName = "HATCH"
         }
         
         var species = ""
-        if ((self.hatchsArray[indexPath.row]["species_uuid"] as? String) != nil){
-            species = self.hatchsArray[indexPath.row]["species_uuid"] as! String
+//        if ((self.hatchsArray[indexPath.row]["species_uuid"] as? String) != nil){
+//            species = self.hatchsArray[indexPath.row]["species_uuid"] as! String
+//        }else{
+//            species = "HATCH"
+//        }
+        
+        if ((self.hatchsArray[indexPath.row]["speciesUUID"] as? String) != nil){
+            species = self.hatchsArray[indexPath.row]["speciesUUID"] as! String
         }else{
             species = "HATCH"
         }
@@ -530,6 +552,12 @@ class ListViewHatches: UIViewController, UITableViewDelegate, UITableViewDataSou
         //print("hatchsarray",self.hatchsArray[indexPath.row])
        
         var startUnixTimestamp_string:String = ""
+//        if ((self.hatchsArray[indexPath.row]["start_unix_timestamp"] as? String) != nil){
+//            startUnixTimestamp_string = self.hatchsArray[indexPath.row]["start_unix_timestamp"] as! String
+//        }else{
+//            startUnixTimestamp_string = "3"
+//        }
+        
         if ((self.hatchsArray[indexPath.row]["start_unix_timestamp"] as? String) != nil){
             startUnixTimestamp_string = self.hatchsArray[indexPath.row]["start_unix_timestamp"] as! String
         }else{
@@ -570,8 +598,14 @@ class ListViewHatches: UIViewController, UITableViewDelegate, UITableViewDataSou
         
         
         var egg_count = 0
-        if ((self.hatchsArray[indexPath.row]["egg_count"] as? Int) != nil){
-            egg_count = self.hatchsArray[indexPath.row]["egg_count"] as! Int
+//        if ((self.hatchsArray[indexPath.row]["egg_count"] as? Int) != nil){
+//            egg_count = self.hatchsArray[indexPath.row]["egg_count"] as! Int
+//        }else{
+//            egg_count = 0
+//        }
+        
+        if ((self.hatchsArray[indexPath.row]["eggCount"] as? Int) != nil){
+            egg_count = self.hatchsArray[indexPath.row]["eggCount"] as! Int
         }else{
             egg_count = 0
         }
@@ -622,8 +656,14 @@ class ListViewHatches: UIViewController, UITableViewDelegate, UITableViewDataSou
             speciesIconString = "species_emu"
         }
         
-        if ((self.hatchsArray[indexPath.row]["incubation_length"] as? Int) != nil){
-            totalDays = self.hatchsArray[indexPath.row]["incubation_length"] as! Int
+//        if ((self.hatchsArray[indexPath.row]["incubation_length"] as? Int) != nil){
+//            totalDays = self.hatchsArray[indexPath.row]["incubation_length"] as! Int
+//        }else{
+//            //species = "HATCH"
+//        }
+        
+        if ((self.hatchsArray[indexPath.row]["incubationLength"] as? Int) != nil){
+            totalDays = self.hatchsArray[indexPath.row]["incubationLength"] as! Int
         }else{
             //species = "HATCH"
         }
@@ -637,7 +677,9 @@ class ListViewHatches: UIViewController, UITableViewDelegate, UITableViewDataSou
         }
         
         print("self.hatchsArray[indexPath.row] ->",self.hatchsArray[indexPath.row])
-        cell.hatchUUID = self.hatchsArray[indexPath.row]["uuid"] as! String
+//        cell.hatchUUID = self.hatchsArray[indexPath.row]["uuid"] as! String
+        
+        cell.hatchUUID = self.hatchsArray[indexPath.row]["hatchUUID"] as! String
         
         cell.dayCount.text = dayCountText
         
@@ -668,7 +710,8 @@ class ListViewHatches: UIViewController, UITableViewDelegate, UITableViewDataSou
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath){
         
-        var title = self.hatchsArray[indexPath.row]["hatch_name"] as! String
+//        var title = self.hatchsArray[indexPath.row]["hatch_name"] as! String
+        var title = self.hatchsArray[indexPath.row]["hatchName"] as! String
         print("HACTHES You selected cell #\(indexPath.row)!")
         let detailView = DetailViewHatch()
         //self.navigationController?.pushViewController(detailView, animated: true)
@@ -677,14 +720,21 @@ class ListViewHatches: UIViewController, UITableViewDelegate, UITableViewDataSou
         let defaults = UserDefaults.standard
         
         var uuid = ""
-        if ((self.hatchsArray[indexPath.row]["uuid"] as? String) != nil){
-            uuid = self.hatchsArray[indexPath.row]["uuid"] as! String
+//        if ((self.hatchsArray[indexPath.row]["uuid"] as? String) != nil){
+//            uuid = self.hatchsArray[indexPath.row]["uuid"] as! String
+//            defaults.set(uuid, forKey: "currentHatchUUID")
+//            defaults.set(NSDate().timeIntervalSince1970, forKey: "tokenTimestamp")
+//            defaults.synchronize()
+//           navigate(vc:detailView,a:true,t:title)
+//        }else{print("error")}
+        
+        if ((self.hatchsArray[indexPath.row]["hatchUUID"] as? String) != nil){
+            uuid = self.hatchsArray[indexPath.row]["hatchUUID"] as! String
             defaults.set(uuid, forKey: "currentHatchUUID")
             defaults.set(NSDate().timeIntervalSince1970, forKey: "tokenTimestamp")
             defaults.synchronize()
            navigate(vc:detailView,a:true,t:title)
         }else{print("error")}
-        
         
     }
     

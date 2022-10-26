@@ -242,12 +242,13 @@ class SignInView: UIViewController, UITextFieldDelegate {
         defaults.set("", forKey:"currentHatchUUID")
         defaults.set(self.textFieldEmail.text, forKey: "email")
         defaults.set(self.textFieldPassword.text, forKey: "password")
+        defaults.set("Test123", forKey: "accessToken")
         defaults.synchronize()
         if(accessToken! == "" || NSDate().timeIntervalSince1970-86400>tokenTimestamp){
             print("initLogin - getAPICalling() - /auth")
             if(!self.textFieldEmail.text!.isEmpty && !self.textFieldPassword.text!.isEmpty){
-                
-                getAPICalling(mainUrl:"/auth",type:"auth", tokenString: "", data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
+                gotoHatches()
+//                getAPICalling(mainUrl:"/auth",type:"auth", tokenString: "", data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
             }
         }else{
             print("initLogin - gotoHatches()")

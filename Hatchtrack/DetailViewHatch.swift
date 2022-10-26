@@ -223,7 +223,9 @@ class DetailViewHatch: UIViewController {
         let accessToken = defaults.string(forKey: "accessToken")
         let uuid = defaults.string(forKey: "currentHatchUUID")
         let data:[String:String] = ["hatchUUID":uuid!,"accessToken":accessToken!]
-        getAPICalling(mainUrl: "/api/v1/hatch", type: "hatch", tokenString: accessToken!, data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
+//        getAPICalling(mainUrl: "/api/v1/hatch", type: "hatch", tokenString: accessToken!, data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
+        let hatchData = Utility.getHatchDataByUUID(uuid ?? "")
+        self.parseHatch(hatchData)
        
     }
 
@@ -273,7 +275,7 @@ class DetailViewHatch: UIViewController {
             loadingIndicator.heightAnchor
                 .constraint(equalTo: self.loadingIndicator.widthAnchor)
         ])
-        loadingIndicator.isAnimating = true
+        // loadingIndicator.isAnimating = true
     }
     
     func convertToDictionary(text: String) -> Any? {
@@ -362,189 +364,8 @@ class DetailViewHatch: UIViewController {
                     as? [String: Any] else {
                       return
                   }
+                    self.parseHatch(object)
                     
-                    var hatchName = ""
-                    if ((object["hatchName"] as? String) != nil){
-                        hatchName = object["hatchName"] as! String
-                    }else{
-                        hatchName = "HATCH"
-                    }
-                    
-                    
-                    var species = ""
-                    var speciesName = ""
-                    if ((object["speciesUUID"] as? String) != nil){
-                        species = object["speciesUUID"] as! String
-                    }else{
-                        species = ""
-                    }
-                    
-                    var eggCount = 0
-                    if ((object["eggCount"] as? Int) != nil){
-                        eggCount = object["eggCount"] as! Int
-                    }else{
-                        eggCount = 0
-                    }
-                    
-                    var incubationLength = 0
-                    if ((object["incubationLength"] as? Int) != nil){
-                        incubationLength = object["incubationLength"] as! Int
-                    }else{
-                        incubationLength = 0
-                    }
-                    
-                    var startUnixTimestamp = 0
-                    if ((object["startUnixTimestamp"] as? Int) != nil){
-                        startUnixTimestamp = object["startUnixTimestamp"] as! Int
-                    }else{
-                        startUnixTimestamp = 0
-                    }
-                   
-                    DispatchQueue.main.async { [self] in
-                        
-                        self.title = hatchName
-                        var speciesIconString:String = "species_chicken"
-                        
-                        if(species == "90df88e3-5ed5-4a1f-a689-97dfc097ebf7"){
-                            speciesIconString = "species_chicken"
-                        }else if(species == "7d2051f5-6346-4d6b-ba9a-1f958a7d3db5"){
-                            speciesIconString = "species_muscovy"
-                        }else if(species == "c0999080-7749-4c9b-ada1-947ec383a845"){
-                            speciesIconString = "species_duck"
-                        }else if(species == "7ff48b3f-ee67-4668-a25d-dd9910fe0382"){
-                            speciesIconString = "species_quail"
-                        }else if(species == "ecc14ee9-0f6f-408b-a2d7-5fb1f1c5688b"){
-                            speciesIconString = "species_goose"
-                        }else if(species == "34dc8aac-3969-4676-a99a-d3406f5c235b"){
-                            speciesIconString = "species_turkey"
-                        }else if(species == "fd761813-f6b2-4e48-b019-bac88c992dc7"){
-                            speciesIconString = "species_peafowl"
-                        }else if(species == "e85e4e09-0b6f-43e2-9c3e-cbfc8ce76f24"){
-                            speciesIconString = "species_pheasant"
-                        }else if(species == "1afc182c-7c83-4ad0-9f8f-56dd0d375950"){
-                            speciesIconString = "species_ostrich"
-                        }else if(species == "a3c24b92-8b2d-484e-94d3-825d3b57e1e5"){
-                            speciesIconString = "species_emu"
-                        }
-                        
-                        
-                        let imgSize = 90
-                       
-                        self.eggTypeImage.image = UIImage(named: speciesIconString)
-                        
-                        self.textLabelHatchTitle.font = UIFont(name:"HelveticaNeue-Bold", size: 36.0)
-                        if(species == "90df88e3-5ed5-4a1f-a689-97dfc097ebf7"){
-                            speciesName = "Chicken";
-                        }else if(species == "7d2051f5-6346-4d6b-ba9a-1f958a7d3db5"){
-                            speciesName = "Mascovey Duck";
-                            self.textLabelHatchTitle.font = UIFont(name:"HelveticaNeue-Bold", size: 28.0)
-                        }else if(species == "c0999080-7749-4c9b-ada1-947ec383a845"){
-                            speciesName = "Duck";
-                        }else if(species == "7ff48b3f-ee67-4668-a25d-dd9910fe0382"){
-                            speciesName = "Quail";
-                        }else if(species == "ecc14ee9-0f6f-408b-a2d7-5fb1f1c5688b"){
-                            speciesName = "Goose";
-                        }else if(species == "34dc8aac-3969-4676-a99a-d3406f5c235b"){
-                            speciesName = "Turkey";
-                        }else if(species == "fd761813-f6b2-4e48-b019-bac88c992dc7"){
-                            speciesName = "Peafowl";
-                        }else if(species == "e85e4e09-0b6f-43e2-9c3e-cbfc8ce76f24"){
-                            speciesName = "Pheasant";
-                        }else if(species == "1afc182c-7c83-4ad0-9f8f-56dd0d375950"){
-                            speciesName = "Ostrich";
-                        }else if(species == "a3c24b92-8b2d-484e-94d3-825d3b57e1e5"){
-                            speciesName = "Emu";
-                        }
-                        
-                        self.loadingIndicator.isAnimating = false
-                        self.showView()
-                        self.textLabelHatchTitle.text = speciesName
-                        //self.textLabelHatchTitle.text = String(eggCount)+" "+speciesName+" eggs"
-                        
-                        
-                        print("startUnixTimestamp: ",startUnixTimestamp)
-                        let days:Int = Int(NSDate().timeIntervalSince1970-Double(startUnixTimestamp))/86400
-                        let diff:CGFloat = CGFloat(NSDate().timeIntervalSince1970)-CGFloat(startUnixTimestamp)
-                        print("Timestamp: ",CGFloat(NSDate().timeIntervalSince1970))
-                        print(" - ",days)
-                        print(" diff: ",diff/86400)
-                        
-                        
-                        self.textLabelDaysNumber.text = "Day "+String(days)+" of "+String(incubationLength)
-                        if(days>=(incubationLength)){
-                            self.textLabelDaysNumber.text = "Hatch Complete"
-                            self.textLabelDaysNumber.textColor = hatchtrackGreen
-                            self.textLabelDaysNumber.font = UIFont(name:"HelveticaNeue-Bold", size: 22.0)
-                        }
-                        
-                        self.textLabelEggsCount.text = String(eggCount)+" Eggs"
-                        var devIndex:[Int]
-                        var currentDev = self.development_info_array[0] as! String
-                        var nextDev = self.development_info_array[1] as! String
-                        for n in 0...self.type_index_json.count{
-                            devIndex = self.type_index_json[species] as! [Int]
-                            if(days>=devIndex[n]){
-                                currentDev = self.development_info_array[n] as! String
-                                nextDev = self.development_info_array[n+1] as! String
-                            }
-                        }
-                        
-                        var todayText:[String] = Array<String>()
-                        let notifObject:[String:Any] = self.notif_info_json[species] as! [String:Any]
-                        
-                        //let notifObject:[[String:[String:Int]]] = self.notif_info_json[species] as! [[String : [String:Int]]]
-                        print("notifObject: ",notifObject)
-                        
-                        var candleArray = notifObject["candle_days"] as! [Int]
-                        var weighArray = notifObject["weigh_days"] as! [Int]
-                        var airCellArray = notifObject["air_cell_days"] as! [Int]
-                        var lockdownDay:Int = notifObject["lockdown_day"] as! Int
-                        
-                        print("candleArray ",candleArray)
-                        print("weighArray ",weighArray)
-                        print("airCellArray ",airCellArray)
-                        print("lockdownArray ",lockdownDay)
-                        
-                        
-                        if(days<lockdownDay){
-                            todayText.append("Turn Eggs 5x")
-                        }
-                        if(candleArray.contains(days)){
-                            todayText.append("Candle")
-                        }
-                        if(weighArray.contains(days)){
-                            todayText.append("Weigh")
-                        }
-                        if(airCellArray.contains(days)){
-                            todayText.append("Air Cell Check")
-                        }
-                        if(days>=lockdownDay){
-                            todayText.append("Lockdown")
-                        }
-                        if(todayText.count == 0){
-                            todayText.append("Nothing today !")
-                        }
-                        
-                        self.textViewCurrentDevBody.text = currentDev
-                        self.textViewTodayBody.text = todayText.joined(separator: ", ")
-                        self.textViewNextStepsBody.text = nextDev
-                        
-                        self.updateLayout()
-                        
-                        if let path = Bundle.main.path(forResource: "test", ofType: "json") {
-                            do {
-                                  let data = try Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe)
-                                  let jsonResult = try JSONSerialization.jsonObject(with: data, options: .mutableLeaves)
-                                  if let jsonResult = jsonResult as? Dictionary<String, AnyObject>, let person = jsonResult["person"] as? [Any] {
-                                            // do stuff
-                                  }
-                              } catch {
-                                   // handle error
-                              }
-                        }
-                        
-                        
-                    }
                     
                     //self.textLabelDaysNumber.text = object["hatchName"] as! String
                     
@@ -560,6 +381,191 @@ class DetailViewHatch: UIViewController {
             
         }
         task.resume()
+    }
+    
+    func parseHatch(_ object: [String: Any]) {
+        var hatchName = ""
+        if ((object["hatchName"] as? String) != nil){
+            hatchName = object["hatchName"] as! String
+        }else{
+            hatchName = "HATCH"
+        }
+        
+        
+        var species = ""
+        var speciesName = ""
+        if ((object["speciesUUID"] as? String) != nil){
+            species = object["speciesUUID"] as! String
+        }else{
+            species = ""
+        }
+        
+        var eggCount = 0
+        if ((object["eggCount"] as? Int) != nil){
+            eggCount = object["eggCount"] as! Int
+        }else{
+            eggCount = 0
+        }
+        
+        var incubationLength = 0
+        if ((object["incubationLength"] as? Int) != nil){
+            incubationLength = object["incubationLength"] as! Int
+        }else{
+            incubationLength = 0
+        }
+        
+        var startUnixTimestamp = 0
+        if ((object["startUnixTimestamp"] as? Int) != nil){
+            startUnixTimestamp = object["startUnixTimestamp"] as! Int
+        }else{
+            startUnixTimestamp = 0
+        }
+       
+        DispatchQueue.main.async { [self] in
+            
+            self.title = hatchName
+            var speciesIconString:String = "species_chicken"
+            
+            if(species == "90df88e3-5ed5-4a1f-a689-97dfc097ebf7"){
+                speciesIconString = "species_chicken"
+            }else if(species == "7d2051f5-6346-4d6b-ba9a-1f958a7d3db5"){
+                speciesIconString = "species_muscovy"
+            }else if(species == "c0999080-7749-4c9b-ada1-947ec383a845"){
+                speciesIconString = "species_duck"
+            }else if(species == "7ff48b3f-ee67-4668-a25d-dd9910fe0382"){
+                speciesIconString = "species_quail"
+            }else if(species == "ecc14ee9-0f6f-408b-a2d7-5fb1f1c5688b"){
+                speciesIconString = "species_goose"
+            }else if(species == "34dc8aac-3969-4676-a99a-d3406f5c235b"){
+                speciesIconString = "species_turkey"
+            }else if(species == "fd761813-f6b2-4e48-b019-bac88c992dc7"){
+                speciesIconString = "species_peafowl"
+            }else if(species == "e85e4e09-0b6f-43e2-9c3e-cbfc8ce76f24"){
+                speciesIconString = "species_pheasant"
+            }else if(species == "1afc182c-7c83-4ad0-9f8f-56dd0d375950"){
+                speciesIconString = "species_ostrich"
+            }else if(species == "a3c24b92-8b2d-484e-94d3-825d3b57e1e5"){
+                speciesIconString = "species_emu"
+            }
+            
+            
+            let imgSize = 90
+           
+            self.eggTypeImage.image = UIImage(named: speciesIconString)
+            
+            self.textLabelHatchTitle.font = UIFont(name:"HelveticaNeue-Bold", size: 36.0)
+            if(species == "90df88e3-5ed5-4a1f-a689-97dfc097ebf7"){
+                speciesName = "Chicken";
+            }else if(species == "7d2051f5-6346-4d6b-ba9a-1f958a7d3db5"){
+                speciesName = "Mascovey Duck";
+                self.textLabelHatchTitle.font = UIFont(name:"HelveticaNeue-Bold", size: 28.0)
+            }else if(species == "c0999080-7749-4c9b-ada1-947ec383a845"){
+                speciesName = "Duck";
+            }else if(species == "7ff48b3f-ee67-4668-a25d-dd9910fe0382"){
+                speciesName = "Quail";
+            }else if(species == "ecc14ee9-0f6f-408b-a2d7-5fb1f1c5688b"){
+                speciesName = "Goose";
+            }else if(species == "34dc8aac-3969-4676-a99a-d3406f5c235b"){
+                speciesName = "Turkey";
+            }else if(species == "fd761813-f6b2-4e48-b019-bac88c992dc7"){
+                speciesName = "Peafowl";
+            }else if(species == "e85e4e09-0b6f-43e2-9c3e-cbfc8ce76f24"){
+                speciesName = "Pheasant";
+            }else if(species == "1afc182c-7c83-4ad0-9f8f-56dd0d375950"){
+                speciesName = "Ostrich";
+            }else if(species == "a3c24b92-8b2d-484e-94d3-825d3b57e1e5"){
+                speciesName = "Emu";
+            }
+            
+            self.loadingIndicator.isAnimating = false
+            self.showView()
+            self.textLabelHatchTitle.text = speciesName
+            //self.textLabelHatchTitle.text = String(eggCount)+" "+speciesName+" eggs"
+            
+            
+            print("startUnixTimestamp: ",startUnixTimestamp)
+            let days:Int = Int(NSDate().timeIntervalSince1970-Double(startUnixTimestamp))/86400
+            let diff:CGFloat = CGFloat(NSDate().timeIntervalSince1970)-CGFloat(startUnixTimestamp)
+            print("Timestamp: ",CGFloat(NSDate().timeIntervalSince1970))
+            print(" - ",days)
+            print(" diff: ",diff/86400)
+            
+            
+            self.textLabelDaysNumber.text = "Day "+String(days)+" of "+String(incubationLength)
+            if(days>=(incubationLength)){
+                self.textLabelDaysNumber.text = "Hatch Complete"
+                self.textLabelDaysNumber.textColor = hatchtrackGreen
+                self.textLabelDaysNumber.font = UIFont(name:"HelveticaNeue-Bold", size: 22.0)
+            }
+            
+            self.textLabelEggsCount.text = String(eggCount)+" Eggs"
+            var devIndex:[Int]
+            var currentDev = self.development_info_array[0] as! String
+            var nextDev = self.development_info_array[1] as! String
+            for n in 0...self.type_index_json.count{
+                devIndex = self.type_index_json[species] as! [Int]
+                if(days>=devIndex[n]){
+                    currentDev = self.development_info_array[n] as! String
+                    nextDev = self.development_info_array[n+1] as! String
+                }
+            }
+            
+            var todayText:[String] = Array<String>()
+            let notifObject:[String:Any] = self.notif_info_json[species] as! [String:Any]
+            
+            //let notifObject:[[String:[String:Int]]] = self.notif_info_json[species] as! [[String : [String:Int]]]
+            print("notifObject: ",notifObject)
+            
+            var candleArray = notifObject["candle_days"] as! [Int]
+            var weighArray = notifObject["weigh_days"] as! [Int]
+            var airCellArray = notifObject["air_cell_days"] as! [Int]
+            var lockdownDay:Int = notifObject["lockdown_day"] as! Int
+            
+            print("candleArray ",candleArray)
+            print("weighArray ",weighArray)
+            print("airCellArray ",airCellArray)
+            print("lockdownArray ",lockdownDay)
+            
+            
+            if(days<lockdownDay){
+                todayText.append("Turn Eggs 5x")
+            }
+            if(candleArray.contains(days)){
+                todayText.append("Candle")
+            }
+            if(weighArray.contains(days)){
+                todayText.append("Weigh")
+            }
+            if(airCellArray.contains(days)){
+                todayText.append("Air Cell Check")
+            }
+            if(days>=lockdownDay){
+                todayText.append("Lockdown")
+            }
+            if(todayText.count == 0){
+                todayText.append("Nothing today !")
+            }
+            
+            self.textViewCurrentDevBody.text = currentDev
+            self.textViewTodayBody.text = todayText.joined(separator: ", ")
+            self.textViewNextStepsBody.text = nextDev
+            
+            self.updateLayout()
+            
+            if let path = Bundle.main.path(forResource: "test", ofType: "json") {
+                do {
+                      let data = try Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe)
+                      let jsonResult = try JSONSerialization.jsonObject(with: data, options: .mutableLeaves)
+                      if let jsonResult = jsonResult as? Dictionary<String, AnyObject>, let person = jsonResult["person"] as? [Any] {
+                                // do stuff
+                      }
+                  } catch {
+                       // handle error
+                  }
+            }
+            
+            
+        }
     }
     
     func updateLayout(){

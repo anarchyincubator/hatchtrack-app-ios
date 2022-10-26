@@ -519,8 +519,10 @@ class HatchConfigReconfig: UIViewController, UIScrollViewDelegate, UIPickerViewD
         
         
         if(!uuid.isEmpty){
-            let data:[String:String] = ["hatchUUID":uuid,"accessToken":accessToken!]
-            getAPICalling(mainUrl: "/api/v1/hatch", type: "hatch", tokenString: accessToken!, data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
+//            let data:[String:String] = ["hatchUUID":uuid,"accessToken":accessToken!]
+//            getAPICalling(mainUrl: "/api/v1/hatch", type: "hatch", tokenString: accessToken!, data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
+            let data = Utility.getHatchDataByUUID(uuid)
+            self.parseHatch(data)
             configLabel.text = "Edit Hatch"
         }else{
             setSelectedEggButton(index:700)
@@ -662,7 +664,7 @@ class HatchConfigReconfig: UIViewController, UIScrollViewDelegate, UIPickerViewD
         let defaults = UserDefaults.standard
         let fcmToken = defaults.string(forKey: "fcmToken")
         
-        let data:[String:Any] = ["peepUUID":"00000000-0000-0000-0000-000000000000","endUnixTimestamp":2147483647,"measureIntervalMin":0,"temperatureOffsetCelsius":0.0,"speciesUUID":species_uuid,"eggCount":egg_count,"hatchName":hatch_name,"timezone":tz,"push_notif_token":fcmToken,"platform":"ios","n_daily_info":n_daily_info,"n_5x_turning":n_5x_turning,"n_candling":n_candling,"n_weighing":n_weighing,"n_cell_check":n_cell_check,"n_lockdown":n_lockdown,"n_hatch_day":n_hatch_day,"incubationLength":incubation_length,"hatchUUID":uuid];
+        var data:[String:Any] = ["peepUUID":"00000000-0000-0000-0000-000000000000","endUnixTimestamp":2147483647,"measureIntervalMin":0,"temperatureOffsetCelsius":0.0,"speciesUUID":species_uuid,"eggCount":egg_count,"hatchName":hatch_name,"timezone":tz,"push_notif_token":fcmToken,"platform":"ios","n_daily_info":n_daily_info,"n_5x_turning":n_5x_turning,"n_candling":n_candling,"n_weighing":n_weighing,"n_cell_check":n_cell_check,"n_lockdown":n_lockdown,"n_hatch_day":n_hatch_day,"incubationLength":incubation_length,"hatchUUID":uuid];
         
         //let data:[String:Any] = ["peepUUID":"00000000-0000-0000-0000-000000000000","endUnixTimestamp":2147483647,"measureIntervalMin":0,"temperatureOffsetCelsius":0.0,"speciesUUID":"e85e4e09-0b6f-43e2-9c3e-cbfc8ce76f24","eggCount":13,"hatchName":"TEST","timezone":-5,"push_notif_token":"","platform":"ios","n_daily_info":true,"n_5x_turning":true,"n_candling":true,"n_weighing":true,"n_cell_check":true,"n_lockdown":true,"n_hatch_day":true,"incubation_length":21];
         
@@ -685,9 +687,23 @@ class HatchConfigReconfig: UIViewController, UIScrollViewDelegate, UIPickerViewD
             //getAPICalling(mainUrl:"https://db.hatchtrack.com:18888/api/v1/peep/hatch",type:"new_hatch",tokenString:accessToken!,jsonString: theJSONText!)
             
             if(uuid != ""){
-                getAPICalling(mainUrl:"/api/v1/hatch/reconfig",type:"update_hatch", tokenString: accessToken!, data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
+//                getAPICalling(mainUrl:"/api/v1/hatch/reconfig",type:"update_hatch", tokenString: accessToken!, data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
+                Utility.addHatchData(data)
+                DispatchQueue.main.async {
+                    self.navigationController?.popViewController(animated: true)
+                    self.dismiss(animated: true, completion: nil)
+                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "reload_hatch_list"), object: nil)
+                }
             }else{
-                getAPICalling(mainUrl:"/api/v1/peep/hatch",type:"new_hatch", tokenString: accessToken!, data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
+//                getAPICalling(mainUrl:"/api/v1/peep/hatch",type:"new_hatch", tokenString: accessToken!, data:data,hostUrl:"db.hatchtrack.com",portUrl:18888)
+                data["hatchUUID"] = Utility.generateUUID(10)
+                Utility.addHatchData(data)
+                DispatchQueue.main.async {
+                    self.navigationController?.popViewController(animated: true)
+                    self.dismiss(animated: true, completion: nil)
+                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "reload_hatch_list"), object: nil)
+                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "loadData"), object: nil)
+                }
             }
             
 
@@ -959,160 +975,8 @@ class HatchConfigReconfig: UIViewController, UIScrollViewDelegate, UIPickerViewD
                 as? [String: Any] else {
                   return
               }
+                self.parseHatch(object)
                 
-                var hatch_name = ""
-                if ((object["hatchName"] as? String) != nil){
-                    hatch_name = object["hatchName"] as! String
-                }else{
-                    hatch_name = ""
-                }
-                
-                var species = ""
-                if ((object["speciesUUID"] as? String) != nil){
-                    species = object["speciesUUID"] as! String
-                }else{
-                    species = ""
-                }
-                
-                var eggCount = 0
-                if ((object["eggCount"] as? Int) != nil){
-                    eggCount = object["eggCount"] as! Int
-                }else{
-                    eggCount = 0
-                }
-                
-                var incubation_length = 0
-                if ((object["incubationLength"] as? Int) != nil){
-                    incubation_length = object["incubationLength"] as! Int
-                }else{
-                    incubation_length = 0
-                }
-                
-                var n_daily:Bool = false
-                if ((object["n_daily"] as? Bool) != nil){
-                    n_daily = object["n_daily"] as! Bool
-                }else{
-                    //n_daily = true
-                }
-                
-                var n_5x:Bool = false
-                if ((object["n_5x"] as? Bool) != nil){
-                    n_5x = object["n_5x"] as! Bool
-                }else{
-                    //n_5x = true
-                }
-                
-                var n_candeling:Bool = false
-                if ((object["n_candeling"] as? Bool) != nil){
-                    n_candeling = object["n_candeling"] as! Bool
-                }else{
-                    //n_candeling = true
-                }
-                
-                var n_weighing:Bool = false
-                if ((object["n_weighing"] as? Bool) != nil){
-                    n_weighing = object["n_weighing"] as! Bool
-                }else{
-                    //n_weighing = true
-                }
-                
-                var n_aircell:Bool = false
-                if ((object["n_aircell"] as? Bool) != nil){
-                    n_aircell = object["n_aircell"] as! Bool
-                }else{
-                    //n_aircell = true
-                }
-                
-                var n_lockdown:Bool = false
-                if ((object["n_lockdown"] as? Bool) != nil){
-                    n_lockdown = object["n_lockdown"] as! Bool
-                }else{
-                    //n_lockdown = true
-                }
-                
-                var n_hatchday:Bool = false
-                if ((object["n_hatchday"] as? Bool) != nil){
-                    n_hatchday = object["n_hatchday"] as! Bool
-                }else{
-                    //n_hatchday = true
-                }
-                print("object: ",object)
-                print("object['n_hatchday']",object["n_hatchday"])
-                self.notificationDefaults = [n_daily,n_5x,n_candeling,n_weighing,n_aircell,n_lockdown,n_hatchday]
-                
-                print("self.notificationDefaults: ",self.notificationDefaults)
-                
-                var species_index = 0
-                if(species == "90df88e3-5ed5-4a1f-a689-97dfc097ebf7"){
-                    species_index = 1;
-                }else if(species == "7ff48b3f-ee67-4668-a25d-dd9910fe0382"){
-                    species_index = 2;
-                }else if(species == "ecc14ee9-0f6f-408b-a2d7-5fb1f1c5688b"){
-                    species_index = 3;
-                }else if(species == "7d2051f5-6346-4d6b-ba9a-1f958a7d3db5"){
-                    species_index = 4;
-                }else if(species == "c0999080-7749-4c9b-ada1-947ec383a845"){
-                    species_index = 5
-                }else if(species == "fd761813-f6b2-4e48-b019-bac88c992dc7"){
-                    species_index = 6;
-                }else if(species == "e85e4e09-0b6f-43e2-9c3e-cbfc8ce76f24"){
-                    species_index = 7;
-                }else if(species == "1afc182c-7c83-4ad0-9f8f-56dd0d375950"){
-                    species_index = 8;
-                }else if(species == "34dc8aac-3969-4676-a99a-d3406f5c235b"){
-                    species_index = 9;
-                }else if(species == "a3c24b92-8b2d-484e-94d3-825d3b57e1e5"){
-                    species_index = 10;
-                }
-                
-                //species_uuid_array = ["90df88e3-5ed5-4a1f-a689-97dfc097ebf7","7ff48b3f-ee67-4668-a25d-dd9910fe0382","ecc14ee9-0f6f-408b-a2d7-5fb1f1c5688b","7d2051f5-6346-4d6b-ba9a-1f958a7d3db5","c0999080-7749-4c9b-ada1-947ec383a845","fd761813-f6b2-4e48-b019-bac88c992dc7","e85e4e09-0b6f-43e2-9c3e-cbfc8ce76f24","1afc182c-7c83-4ad0-9f8f-56dd0d375950","34dc8aac-3969-4676-a99a-d3406f5c235b","a3c24b92-8b2d-484e-94d3-825d3b57e1e5"]
-                
-                
-                
-                self.reconfigData = [hatch_name,eggCount,species_index,incubation_length,n_daily,n_5x,n_candeling,n_weighing,n_aircell,n_lockdown,n_hatchday]
-                    print("API - self.reconfigData:", self.reconfigData)
-                
-                DispatchQueue.main.async { [self] in
-                    currentSpeciesUUID = species
-                    setSelectedEggButton(index:700+(species_index-1))
-                    
-                    //UPDATE UI
-                    //GET - n_daily_info
-                    if let n_toggle = self.view.viewWithTag(400) as? UISwitch {
-                        n_toggle.isOn = n_daily
-                        print("n_toggle = self.view.viewWithTag(400) as? UISwitch: ",n_daily)
-                    }
-                    //GET - n_5x
-                    if let n_toggle = self.view.viewWithTag(401) as? UISwitch {
-                        n_toggle.isOn = n_5x
-                    }
-                    //GET - n_candling
-                    if let n_toggle = self.view.viewWithTag(402) as? UISwitch {
-                        n_toggle.isOn = n_candeling
-                    }
-                    //GET - n_weighing
-                    if let n_toggle = self.view.viewWithTag(403) as? UISwitch {
-                        n_toggle.isOn = n_weighing
-                    }
-                    //GET - n_air_cell
-                    if let n_toggle = self.view.viewWithTag(404) as? UISwitch {
-                        n_toggle.isOn = n_aircell
-                    }
-                    //GET - n_lockdown
-                    if let n_toggle = self.view.viewWithTag(405) as? UISwitch {
-                        n_toggle.isOn = n_lockdown
-                    }
-                    //GET - n_hatch_day
-                    if let n_toggle = self.view.viewWithTag(406) as? UISwitch {
-                        n_toggle.isOn = n_hatchday
-                    }
-                    inputHatchName.text = String(hatch_name)
-                    inputEggCount.text = String(eggCount)
-                    inputDayCount.text = String(incubation_length)
-               
-                    //self.scrollView.reloadData()
-                    self.showTable()
-                }
                     //END "do"
             } catch  {
                 print("error trying to convert data to JSON")
@@ -1125,6 +989,162 @@ class HatchConfigReconfig: UIViewController, UIScrollViewDelegate, UIPickerViewD
             
         }
         task.resume()
+    }
+    
+    func parseHatch(_ object:[String: Any]) {
+        var hatch_name = ""
+        if ((object["hatchName"] as? String) != nil){
+            hatch_name = object["hatchName"] as! String
+        }else{
+            hatch_name = ""
+        }
+        
+        var species = ""
+        if ((object["speciesUUID"] as? String) != nil){
+            species = object["speciesUUID"] as! String
+        }else{
+            species = ""
+        }
+        
+        var eggCount = 0
+        if ((object["eggCount"] as? Int) != nil){
+            eggCount = object["eggCount"] as! Int
+        }else{
+            eggCount = 0
+        }
+        
+        var incubation_length = 0
+        if ((object["incubationLength"] as? Int) != nil){
+            incubation_length = object["incubationLength"] as! Int
+        }else{
+            incubation_length = 0
+        }
+        
+        var n_daily:Bool = false
+        if ((object["n_daily"] as? Bool) != nil){
+            n_daily = object["n_daily"] as! Bool
+        }else{
+            //n_daily = true
+        }
+        
+        var n_5x:Bool = false
+        if ((object["n_5x"] as? Bool) != nil){
+            n_5x = object["n_5x"] as! Bool
+        }else{
+            //n_5x = true
+        }
+        
+        var n_candeling:Bool = false
+        if ((object["n_candeling"] as? Bool) != nil){
+            n_candeling = object["n_candeling"] as! Bool
+        }else{
+            //n_candeling = true
+        }
+        
+        var n_weighing:Bool = false
+        if ((object["n_weighing"] as? Bool) != nil){
+            n_weighing = object["n_weighing"] as! Bool
+        }else{
+            //n_weighing = true
+        }
+        
+        var n_aircell:Bool = false
+        if ((object["n_aircell"] as? Bool) != nil){
+            n_aircell = object["n_aircell"] as! Bool
+        }else{
+            //n_aircell = true
+        }
+        
+        var n_lockdown:Bool = false
+        if ((object["n_lockdown"] as? Bool) != nil){
+            n_lockdown = object["n_lockdown"] as! Bool
+        }else{
+            //n_lockdown = true
+        }
+        
+        var n_hatchday:Bool = false
+        if ((object["n_hatchday"] as? Bool) != nil){
+            n_hatchday = object["n_hatchday"] as! Bool
+        }else{
+            //n_hatchday = true
+        }
+        print("object: ",object)
+        print("object['n_hatchday']",object["n_hatchday"])
+        self.notificationDefaults = [n_daily,n_5x,n_candeling,n_weighing,n_aircell,n_lockdown,n_hatchday]
+        
+        print("self.notificationDefaults: ",self.notificationDefaults)
+        
+        var species_index = 0
+        if(species == "90df88e3-5ed5-4a1f-a689-97dfc097ebf7"){
+            species_index = 1;
+        }else if(species == "7ff48b3f-ee67-4668-a25d-dd9910fe0382"){
+            species_index = 2;
+        }else if(species == "ecc14ee9-0f6f-408b-a2d7-5fb1f1c5688b"){
+            species_index = 3;
+        }else if(species == "7d2051f5-6346-4d6b-ba9a-1f958a7d3db5"){
+            species_index = 4;
+        }else if(species == "c0999080-7749-4c9b-ada1-947ec383a845"){
+            species_index = 5
+        }else if(species == "fd761813-f6b2-4e48-b019-bac88c992dc7"){
+            species_index = 6;
+        }else if(species == "e85e4e09-0b6f-43e2-9c3e-cbfc8ce76f24"){
+            species_index = 7;
+        }else if(species == "1afc182c-7c83-4ad0-9f8f-56dd0d375950"){
+            species_index = 8;
+        }else if(species == "34dc8aac-3969-4676-a99a-d3406f5c235b"){
+            species_index = 9;
+        }else if(species == "a3c24b92-8b2d-484e-94d3-825d3b57e1e5"){
+            species_index = 10;
+        }
+        
+        //species_uuid_array = ["90df88e3-5ed5-4a1f-a689-97dfc097ebf7","7ff48b3f-ee67-4668-a25d-dd9910fe0382","ecc14ee9-0f6f-408b-a2d7-5fb1f1c5688b","7d2051f5-6346-4d6b-ba9a-1f958a7d3db5","c0999080-7749-4c9b-ada1-947ec383a845","fd761813-f6b2-4e48-b019-bac88c992dc7","e85e4e09-0b6f-43e2-9c3e-cbfc8ce76f24","1afc182c-7c83-4ad0-9f8f-56dd0d375950","34dc8aac-3969-4676-a99a-d3406f5c235b","a3c24b92-8b2d-484e-94d3-825d3b57e1e5"]
+        
+        
+        
+        self.reconfigData = [hatch_name,eggCount,species_index,incubation_length,n_daily,n_5x,n_candeling,n_weighing,n_aircell,n_lockdown,n_hatchday]
+            print("API - self.reconfigData:", self.reconfigData)
+        
+        DispatchQueue.main.async { [self] in
+            currentSpeciesUUID = species
+            setSelectedEggButton(index:700+(species_index-1))
+            
+            //UPDATE UI
+            //GET - n_daily_info
+            if let n_toggle = self.view.viewWithTag(400) as? UISwitch {
+                n_toggle.isOn = n_daily
+                print("n_toggle = self.view.viewWithTag(400) as? UISwitch: ",n_daily)
+            }
+            //GET - n_5x
+            if let n_toggle = self.view.viewWithTag(401) as? UISwitch {
+                n_toggle.isOn = n_5x
+            }
+            //GET - n_candling
+            if let n_toggle = self.view.viewWithTag(402) as? UISwitch {
+                n_toggle.isOn = n_candeling
+            }
+            //GET - n_weighing
+            if let n_toggle = self.view.viewWithTag(403) as? UISwitch {
+                n_toggle.isOn = n_weighing
+            }
+            //GET - n_air_cell
+            if let n_toggle = self.view.viewWithTag(404) as? UISwitch {
+                n_toggle.isOn = n_aircell
+            }
+            //GET - n_lockdown
+            if let n_toggle = self.view.viewWithTag(405) as? UISwitch {
+                n_toggle.isOn = n_lockdown
+            }
+            //GET - n_hatch_day
+            if let n_toggle = self.view.viewWithTag(406) as? UISwitch {
+                n_toggle.isOn = n_hatchday
+            }
+            inputHatchName.text = String(hatch_name)
+            inputEggCount.text = String(eggCount)
+            inputDayCount.text = String(incubation_length)
+       
+            //self.scrollView.reloadData()
+            self.showTable()
+        }
     }
     
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
